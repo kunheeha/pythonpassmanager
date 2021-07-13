@@ -21,26 +21,23 @@ def create_table(connection, sql_statement):
     except Error as e:
         print(e)
 
-def init_user(connection):
-    sql = '''
-    INSERT INTO User DEFAULT VALUES;
-    '''
 
-    try:
-        c = connection.cursor()
-        c.execute(sql)
-    except Error as e:
-        print(e)
-
+def check_user(connection):
+    c = connection.cursor()
+    c.execute("SELECT registered FROM User LIMIT 1;")
+    result = c.fetchall()
+    return result
 
 def register_user(connection, user):
-    new_user = (user.name, user.masterpassword, user.key)
+    new_user = (1, user.name, user.masterpassword, user.key)
     sql = '''
-    INSERT INTO user(
+    INSERT INTO User(registered,name,masterpass,cryptkey)
+    VALUES(?,?,?,?)
     '''
-    #name
-    #masterpass
-    #cryptkey
+    c = connection.cursor()
+    c.execute(sql, new_user)
+    connection.commit()
+    return c.lastrowid
 
 
 

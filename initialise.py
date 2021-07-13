@@ -32,7 +32,6 @@ if conn is not None:
     create_table(conn, create_user)
     create_table(conn, create_account_table)
     create_table(conn, create_password_table)
-    init_user(conn)
     print('Tables successfully created')
 else:
     print('Error, unable to create connection to db')
