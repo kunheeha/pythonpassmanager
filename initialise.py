@@ -1,4 +1,4 @@
-from database import create_connection, create_table, init_user
+from database import create_connection, create_table
 
 database = r'mypasswords.db'
 
@@ -26,12 +26,16 @@ CREATE TABLE 'Password' (
 'id_Account' TEXT DEFAULT NULL REFERENCES 'Account' ('id')
 );'''
 
-conn = create_connection(database)
+def initialise_db():
 
-if conn is not None:
-    create_table(conn, create_user)
-    create_table(conn, create_account_table)
-    create_table(conn, create_password_table)
-    print('Tables successfully created')
-else:
-    print('Error, unable to create connection to db')
+    conn = create_connection(database)
+    
+    if conn is not None:
+        create_table(conn, create_user)
+        create_table(conn, create_account_table)
+        create_table(conn, create_password_table)
+        print('Tables successfully created')
+        return True
+    else:
+        print('Error, unable to create connection to db')
+        return False
