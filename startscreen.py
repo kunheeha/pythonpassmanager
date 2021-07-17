@@ -1,52 +1,75 @@
+import os.path
 from tkinter import *
+from database import check_user, create_connection, register_user
+from initialise import initialise_db
+from models import User
+
 
 root = Tk()
 root.title('Password Manager')
 
-e = Entry(root, width=35, borderwidth=5)
-e.grid(row=0, column=0, columnspan=3, padx=1, pady=10)
+# include a popup message window when failing to create databse
+
+database_exists = os.path.exists('mypasswords.db')
+if not database_exists:
+    successful_init = initialise_db()
+    if not successful_init:
+        print('failed to create database')
+
+conn = create_connection(r'mypasswords.db')
+usercheck = len(check_user(conn)) > 0
+
+#def login_screen():
+#    global masterpass_var
+#    masterpass_var = StringVar()
+#    login_button.pack_forget()
+#    close_button.pack_forget()
+#    prompt_label.text = 'Enter Master Password'
+#    name_label.pack_forget()
+#    name_entry.pack_forget()
+#    register_user_button.pack_forget()
+#    pass_entry.textvariable = masterpass_var
+#
+#    login_button = Button(root, text='Login')
+#    login_button.pack()
+
+def register():
+    name = name_var.get()
+    passw = passw_var.get()
+    new_user = User(name, passw)
+    register_user(conn, new_user)
+    login_screen()
+
+def register_screen():
+    global name_var
+    global passw_var
+    name_var = StringVar()
+    passw_var = StringVar()
+    
+    register_button.pack_forget()
+    root.title('Register')
+    prompt_label = Label(root, text='Enter details below').pack()
+    name_label = Label(root, text='Name').pack()
+    name_entry = Entry(root, textvariable=name_var)
+    pass_entry = Entry(root, textvariable=passw_var)
+    name_entry.pack()
+    pass_label = Label(root, text='Master Password').pack()
+    pass_entry.pack()
+    register_user_button = Button(root, text='Register', command=register)
+    register_user_button.pack()
+
+register_button = Button(root, text="Start", command=register_screen)
+login_button = Button(root, text="Login")
+close_button = Button(root, text="Close")
 
 
-def button_click(number):
-    current = e.get()
-    e.delete(0, END)
-    e.insert(0, str(current) + str(number))
+def startscreen():
+    if usercheck == True:
+        login_button.pack()
+        close_button.pack()
+    else:
+        register_button.pack()
 
-def button_add():
-    return
 
-def button_equals():
-    e.delete(0, END)
-    nu_of_number = 0
-    return
-
-button_1 = Button(root, text='1', padx=40, pady=20, command=lambda: button_click(1))
-button_2 = Button(root, text='2', padx=40, pady=20, command=lambda: button_click(2))
-button_3 = Button(root, text='3', padx=40, pady=20, command=lambda: button_click(3))
-button_4 = Button(root, text='4', padx=40, pady=20, command=lambda: button_click(4))
-button_5 = Button(root, text='5', padx=40, pady=20, command=lambda: button_click(5))
-button_6 = Button(root, text='6', padx=40, pady=20, command=lambda: button_click(6))
-button_7 = Button(root, text='7', padx=40, pady=20, command=lambda: button_click(7))
-button_8 = Button(root, text='8', padx=40, pady=20, command=lambda: button_click(8))
-button_9 = Button(root, text='9', padx=40, pady=20, command=lambda: button_click(9))
-button_0 = Button(root, text='0', padx=40, pady=20, command=lambda: button_click(0))
-button_add = Button(root, text='+', padx=40, pady=20, command=button_add)
-button_equals = Button(root, text='=', padx=40, pady=20, command=button_equals)
-
-button_1.grid(row=3, column=0)
-button_2.grid(row=3, column=1)
-button_3.grid(row=3, column=2)
-
-button_4.grid(row=2, column=0)
-button_5.grid(row=2, column=1)
-button_6.grid(row=2, column=2)
-
-button_7.grid(row=1, column=0)
-button_8.grid(row=1, column=1)
-button_9.grid(row=1, column=2)
-
-button_0.grid(row=4, column=0)
-button_add.grid(row=4, column=1)
-button_equals.grid(row=4, column=2)
-
+startscreen()
 root.mainloop()
