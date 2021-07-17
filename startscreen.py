@@ -1,6 +1,6 @@
 import os.path
 import tkinter as tk
-from database import check_user, create_connection, register_user
+from database import check_user, create_connection, register_user, login
 from initialise import initialise_db
 from models import User
 
@@ -26,7 +26,7 @@ class PassManagerApp(tk.Tk):
 
         self.frames = {}
 
-        for F in (StartPage, RegisterPage, LoginPage):
+        for F in (StartPage, RegisterPage, LoginPage, SuccessTest):
 
             frame = F(container, self)
 
@@ -89,13 +89,31 @@ class RegisterPage(tk.Frame):
 class LoginPage(tk.Frame):
     def __init__(self, parent, controller):
         tk.Frame.__init__(self, parent)
-        passw_var = tk.StringVar()
+        self.controller = controller
+        self.passw_var = tk.StringVar()
 
         prompt_label = tk.Label(self, text='Enter Master Password')
-        passw_entry = tk.Entry(self, textvariable=passw_var)
+        passw_entry = tk.Entry(self, textvariable=self.passw_var)
+        login_button = tk.Button(self, text='Login', command=lambda: self.login_attempt(self.controller))
 
         prompt_label.pack()
         passw_entry.pack()
+        login_button.pack()
+        
+    def login_attempt(self, controller):
+        passw = self.passw_var.get()
+        if login(conn, passw):
+            controller.show_frame(SuccessTest)
+        else:
+            print('login failed')
+
+class SuccessTest(tk.Frame):
+
+    def __init__(self, parent, controller):
+        tk.Frame.__init__(self, parent)
+
+        prompt_label = tk.Label(self, text='Success!')
+        prompt_label.pack()
 
 app = PassManagerApp()
 app.mainloop()

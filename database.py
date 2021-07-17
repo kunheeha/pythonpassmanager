@@ -1,3 +1,4 @@
+from passlib.hash import sha256_crypt
 import sqlite3
 from sqlite3 import Error
 
@@ -39,5 +40,13 @@ def register_user(connection, user):
     connection.commit()
     return c.lastrowid
 
+def login(connection, inputpassword):
+    c = connection.cursor()
+    c.execute("SELECT masterpass FROM User LIMIT 1;")
+    result = c.fetchall()
+    match = result[0][0]
+    return sha256_crypt.verify(inputpassword, match)
+
+    
 
 
