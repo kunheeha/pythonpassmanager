@@ -1,7 +1,7 @@
 import os.path
 import tkinter as tk
 from cryptography.fernet import Fernet
-from database import check_user, create_connection, register_user, login, save_account, get_accounts, get_passwords
+from database import check_user, create_connection, register_user, login, save_account, get_accounts, get_passwords, delete_account_db
 from initialise import initialise_db
 from models import User, Account, Password
 
@@ -114,27 +114,76 @@ class MainScreen(tk.Frame):
         tk.Frame.__init__(self, parent)
         self.controller = controller
         self.accounts = get_accounts(conn)
-        self.shown_accounts = []
-        self.shown_accounts_x = {}
+        self.shown_accounts = {}
 
         for x in range(len(self.accounts)):
             i = self.accounts[x][0]
-            self.shown_accounts_x[f'account_{x}'] = tk.Button(self, text=self.accounts[x][1], command=lambda i=i: self.view_account(i))
-            self.shown_accounts_x[f'account_{x}'].pack()
-
-        print(self.shown_accounts_x)
-
-#        for account in self.accounts:
-#            accountbutton = tk.Button(self, text=account[1], command=lambda: self.view_account(account[0]))
-#            accountbutton.pack()
-#            self.shown_accounts.append(accountbutton)
+            self.shown_accounts[f'account_{x}'] = tk.Button(self, text=self.accounts[x][1], command=lambda i=i: self.view_account(i))
+            self.shown_accounts[f'account_{x}'].pack()
 
         add_account_button = tk.Button(self, text='New Account', command=lambda: self.add_new_account(self.controller))
         add_account_button.pack()
 
+    def show_password(self, pass_number):
+        pass
+
+    def add_password(self, multiple):
+        print('did it')
+
     def view_account(self, account_id):
-        #AccountPage = tk.Toplevel()
-        print(account_id)
+        AccountPage = tk.Toplevel()
+        this_account = get_passwords(conn, account_id)
+
+        if this_account['multiple'] > 0 and len(this_account['passwords']) > 0:
+            shown_passwords = {}
+            for x in range(len(this_account['passwords'])):
+                i = x
+                shown_passwords[f'pass_{x}'] = tk.Button(AccountPage, text=this_account['passwords'][x][0], command=lambda i=i: self.show_password(i))
+                shown_passwords[f'pass_{x}'].pack()
+
+        elif this_account['multiple']> 0 and len(this_account['passwords']) == 0:
+            add_pass_button = tk.Button(AccountPage, text='Add Password', command=lambda: self.add_password(True))
+            add_pass_button.pack()
+
+        elif not this_account['passwords']is None:
+            account_password = tk.Label(AccountPage, text=this_account['passwords'])
+            account_password.pack()
+
+        elif this_account['passwords']is None:    
+            add_pass_button = tk.Button(AccountPage, text='Add Password', command=lambda: self.add_password(False))
+            add_pass_button.pack()
+
+        delete_account_button = tk.Button(AccountPage, text='Delete Account', command=lambda: self.delete_account_confirm(account_id, AccountPage))
+        delete_account_button.pack()
+
+    def delete_account_confirm(self, account_id, parentScreen):
+        ConfirmDelete = tk.Toplevel()
+        this_account = get_passwords(conn, account_id)
+        confirm_label = tk.Label(ConfirmDelete, text=f'Are you sure you want to delete {this_account["account_name"]}?')
+        confirm_button = tk.Button(ConfirmDelete, text='Delete', command=lambda: self.delete_account(account_id, ConfirmDelete, parentScreen))
+
+        confirm_label.pack()
+        confirm_button.pack()
+
+    def delete_account(self, account_id, currentScreen, parentScreen):
+        if delete_account_db(conn, account_id) is True:
+            self.accounts = get_accounts(conn)
+            for w in self.shown_accounts:
+                self.shown_accounts[w].destroy()
+            self.shown_accounts = {}
+            for x in range(len(self.accounts)):
+                i = self.accounts[x][0]
+                self.shown_accounts[f'account_{x}'] = tk.Button(self, text=self.accounts[x][1], command=lambda i=i: self.view_account(i))
+                self.shown_accounts[f'account_{x}'].pack()
+
+                currentScreen.destroy()
+                parentScreen.destroy()
+
+        else:
+            print('error')
+        
+
+
 
 
     def add_new_account(self, controller):
@@ -163,12 +212,12 @@ class MainScreen(tk.Frame):
 
         self.accounts = get_accounts(conn)
         for w in self.shown_accounts:
-            w.destroy()
-        self.shown_accounts = []
-        for account in self.accounts:
-            accountbutton = tk.Button(self, text=account[1], command=lambda: self.view_account(account[0]))
-            accountbutton.pack()
-            self.shown_accounts.append(accountbutton)
+            self.shown_accounts[w].destroy()
+        self.shown_accounts = {}
+        for x in range(len(self.accounts)):
+            i = self.accounts[x][0]
+            self.shown_accounts[f'account_{x}'] = tk.Button(self, text=self.accounts[x][1], command=lambda i=i: self.view_account(i))
+            self.shown_accounts[f'account_{x}'].pack()
         
         currentScreen.destroy()
 

@@ -1,6 +1,6 @@
 from passlib.hash import sha256_crypt
 from models import User
-from database import check_user, create_connection, register_user
+from database import check_user, create_connection, register_user, get_passwords
 
 # Check that it connects to database correctly
 def database_connection(database_name):
@@ -24,7 +24,10 @@ def check_user_registration():
     conn = create_connection(r"mypasswords.db")
     print(register_user(conn, testuser))
 
-    
+# Check get_passwords function
+def check_get_passwords():
+    conn = create_connection(r'mypasswords.db')
+    assert get_passwords(conn, 1) == {'multiple': 1, 'account_name': 'Example', 'passwords': [('Enter Password', 'mypassword')]}
 
 
 if __name__ == '__main__':

@@ -71,27 +71,36 @@ def get_accounts(connection):
 def get_passwords(connection, account_id):
     c = connection.cursor()
     c.execute(f'SELECT name, multiple FROM Account WHERE id = {account_id};')
-    print(c.fetchall())
-#    account_name = c.fetchall()[0][0]
-#    multiple = c.fetchall()[0][1]
-#    if multiple > 0:
-#        c.execute(f'SELECT prompt, password FROM Password WHERE id_Account = {account_id}') 
-#        account_info = {
-#                    'multiple': multiple,
-#                    'account_name': account_name,
-#                    'passwords': c.fetchall(),
-#                }
-#        return account_info
-#    else:
-#        c.execute(f'SELECT password FROM Password WHERE id_Account = {account_id}')
-#        account_info = {
-#                    'multiple': multiple,
-#                    'account_name': account_name,
-#                    'password': c.fetchall()[0][0]
-#                }
-#        return account_info
+    retrieved_account = c.fetchall()
+    account_name = retrieved_account[0][0]
+    multiple = retrieved_account[0][1]
+    passwords = None
+    c.execute(f'SELECT prompt, password FROM Password WHERE id_Account = {account_id}') 
+    
+    if multiple > 0:
+        passwords = c.fetchall()
+    else:
+        try:
+            passwords = c.fetchall()[0][0]
+        except:
+            pass
 
+    account_info = {
+                'multiple': multiple,
+                'account_name': account_name,
+                'passwords': passwords
+            }
 
+    return account_info 
+            
+def delete_account_db(connection, account_id):
+    c = connection.cursor()
+    try:
+        c.execute(f'DELETE FROM Password WHERE id_Account = {account_id}')
+        c.execute(f'DELETE FROM Account WHERE id = {account_id}')
+        return True
+    except:
+        return False
 
 
 
