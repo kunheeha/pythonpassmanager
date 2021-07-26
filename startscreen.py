@@ -1,8 +1,9 @@
 import os.path
 import tkinter as tk
-from database import check_user, create_connection, register_user, login
+from cryptography.fernet import Fernet
+from database import check_user, create_connection, register_user, login, save_account, get_accounts, get_passwords
 from initialise import initialise_db
-from models import User
+from models import User, Account, Password
 
 
 database_exists = os.path.exists('mypasswords.db')
@@ -26,7 +27,7 @@ class PassManagerApp(tk.Tk):
 
         self.frames = {}
 
-        for F in (StartPage, RegisterPage, LoginPage, SuccessTest):
+        for F in (StartPage, RegisterPage, LoginPage, MainScreen):
 
             frame = F(container, self)
 
@@ -84,8 +85,6 @@ class RegisterPage(tk.Frame):
         controller.show_frame(LoginPage)
 
 
-
-
 class LoginPage(tk.Frame):
     def __init__(self, parent, controller):
         tk.Frame.__init__(self, parent)
@@ -95,6 +94,7 @@ class LoginPage(tk.Frame):
         prompt_label = tk.Label(self, text='Enter Master Password')
         passw_entry = tk.Entry(self, textvariable=self.passw_var)
         login_button = tk.Button(self, text='Login', command=lambda: self.login_attempt(self.controller))
+        self.fail_label = tk.Label(self, text='Login Failed, try again')
 
         prompt_label.pack()
         passw_entry.pack()
@@ -103,53 +103,82 @@ class LoginPage(tk.Frame):
     def login_attempt(self, controller):
         passw = self.passw_var.get()
         if login(conn, passw):
-            controller.show_frame(SuccessTest)
+            controller.show_frame(MainScreen)
         else:
-            print('login failed')
+            self.fail_label.pack()
+            
 
-class SuccessTest(tk.Frame):
+class MainScreen(tk.Frame):
 
     def __init__(self, parent, controller):
         tk.Frame.__init__(self, parent)
+        self.controller = controller
+        self.accounts = get_accounts(conn)
+        self.shown_accounts = []
+        self.shown_accounts_x = {}
 
-        prompt_label = tk.Label(self, text='Success!')
-        prompt_label.pack()
+        for x in range(len(self.accounts)):
+            i = self.accounts[x][0]
+            self.shown_accounts_x[f'account_{x}'] = tk.Button(self, text=self.accounts[x][1], command=lambda i=i: self.view_account(i))
+            self.shown_accounts_x[f'account_{x}'].pack()
+
+        print(self.shown_accounts_x)
+
+#        for account in self.accounts:
+#            accountbutton = tk.Button(self, text=account[1], command=lambda: self.view_account(account[0]))
+#            accountbutton.pack()
+#            self.shown_accounts.append(accountbutton)
+
+        add_account_button = tk.Button(self, text='New Account', command=lambda: self.add_new_account(self.controller))
+        add_account_button.pack()
+
+    def view_account(self, account_id):
+        #AccountPage = tk.Toplevel()
+        print(account_id)
+
+
+    def add_new_account(self, controller):
+        #controller.show_frame(AddAccount)
+        AddAccount = tk.Toplevel(self)
+
+        self.account_name_var = tk.StringVar()
+        self.multiple_passwords_var = tk.IntVar()
+
+        account_name_label = tk.Label(AddAccount, text='Account Name')
+        multiple_passwords = tk.Checkbutton(AddAccount, text='Check if this account has multiple passwords', variable=self.multiple_passwords_var, onvalue=1, offvalue=0)
+        account_name_entry = tk.Entry(AddAccount, textvariable=self.account_name_var)
+        add_button = tk.Button(AddAccount, text='Add', command=lambda: self.add_account(AddAccount))
+
+        account_name_label.pack()
+        account_name_entry.pack()
+        multiple_passwords.pack()
+        add_button.pack()
+
+
+    def add_account(self, currentScreen):
+        account_name = self.account_name_var.get()
+        multiple_passwords = self.multiple_passwords_var.get()
+        new_account = Account(account_name, multiple_passwords)
+        save_account(conn, new_account)
+
+        self.accounts = get_accounts(conn)
+        for w in self.shown_accounts:
+            w.destroy()
+        self.shown_accounts = []
+        for account in self.accounts:
+            accountbutton = tk.Button(self, text=account[1], command=lambda: self.view_account(account[0]))
+            accountbutton.pack()
+            self.shown_accounts.append(accountbutton)
+        
+        currentScreen.destroy()
+
+
+
+
+
+
 
 app = PassManagerApp()
 app.mainloop()
-
-#def login_screen():
-#    global masterpass_var
-#    masterpass_var = StringVar()
-#    login_button.pack_forget()
-#    close_button.pack_forget()
-#    prompt_label.text = 'Enter Master Password'
-#    name_label.pack_forget()
-#    name_entry.pack_forget()
-#    register_user_button.pack_forget()
-#    pass_entry.textvariable = masterpass_var
-#
-#    login_button = Button(root, text='Login')
-#    login_button.pack()
-
-
-#def register_screen():
-#    global name_var
-#    global passw_var
-#    name_var = StringVar()
-#    passw_var = StringVar()
-#    
-#    register_button.pack_forget()
-#    root.title('Register')
-#    prompt_label = tk.Label(root, text='Enter details below').pack()
-#    name_label = tk.Label(root, text='Name').pack()
-#    name_entry = Entry(root, textvariable=name_var)
-#    pass_entry = Entry(root, textvariable=passw_var)
-#    name_entry.pack()
-#    pass_label = tk.Label(root, text='Master Password').pack()
-#    pass_entry.pack()
-#    register_user_button = Button(root, text='Register', command=register)
-#    register_user_button.pack()
-
 
 
