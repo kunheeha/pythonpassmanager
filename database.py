@@ -136,10 +136,19 @@ def delete_account_db(connection, account_id):
     try:
         c.execute(f'DELETE FROM Password WHERE id_Account = {account_id}')
         c.execute(f'DELETE FROM Account WHERE id = {account_id}')
+        connection.commit()
         return True
     except:
         return False
 
+def delete_pass_db(connection, pass_id):
+    c = connection.cursor()
+    try:
+        c.execute(f'DELETE FROM Password WHERE id = {pass_id}')
+        connection.commit()
+        return True
+    except:
+        return False
 
 
 

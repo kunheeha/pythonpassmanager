@@ -1,7 +1,7 @@
 import os.path
 import tkinter as tk
 from cryptography.fernet import Fernet
-from database import check_user, create_connection, register_user, login, save_account, get_accounts, get_passwords, delete_account_db, save_password_multiple, save_password_single, get_show_password
+from database import check_user, create_connection, register_user, login, save_account, get_accounts, get_passwords, delete_account_db, save_password_multiple, save_password_single, get_show_password, delete_pass_db
 from initialise import initialise_db
 from models import User, Account, Password
 
@@ -126,9 +126,29 @@ class MainScreen(tk.Frame):
 
     def show_password(self, pass_id):
         PasswordScreen = tk.Toplevel()
-        password = get_show_password(conn, pass_id)
+        password = str(get_show_password(conn, pass_id))
         pass_label = tk.Label(PasswordScreen, text=password)
+        delete_pass_button = tk.Button(PasswordScreen, text='Delete Password', command=lambda: self.delete_password_confirm(pass_id, PasswordScreen))
+        
         pass_label.pack()
+        delete_pass_button.pack()
+
+    def delete_password_confirm(self, pass_id, parentScreen):
+        ConfirmDelPass = tk.Toplevel()
+        this_pass = str(get_show_password(conn, pass_id))
+        confirm_label = tk.Label(ConfirmDelPass, text=f'Are you sure you want to delete password: {this_pass}?')
+        confirm_button = tk.Button(ConfirmDelPass, text='Delete', command=lambda: self.delete_password(pass_id, ConfirmDelPass, parentScreen))
+
+        confirm_label.pack()
+        confirm_button.pack()
+
+    def delete_password(self, pass_id, currentScreen, parentScreen):
+        if delete_pass_db(conn, pass_id) is True:
+            currentScreen.destroy()
+            parentScreen.destroy()
+
+        else:
+            print('error')
 
     def add_password_screen(self, multiple, account_id):
         AddPasswordScreen = tk.Toplevel()
