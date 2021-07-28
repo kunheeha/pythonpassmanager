@@ -17,3 +17,7 @@ class Password:
         self.password = password
         self.account = account
         self.prompt = None
+
+    def __str__(self):
+        return f'account: {self.account}, prompt: {self.prompt}, pass: {self.password}'
+        

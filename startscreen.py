@@ -1,7 +1,7 @@
 import os.path
 import tkinter as tk
 from cryptography.fernet import Fernet
-from database import check_user, create_connection, register_user, login, save_account, get_accounts, get_passwords, delete_account_db
+from database import check_user, create_connection, register_user, login, save_account, get_accounts, get_passwords, delete_account_db, save_password
 from initialise import initialise_db
 from models import User, Account, Password
 
@@ -127,8 +127,37 @@ class MainScreen(tk.Frame):
     def show_password(self, pass_number):
         pass
 
-    def add_password(self, multiple):
-        print('did it')
+    def add_password_screen(self, multiple, account_id):
+        AddPasswordScreen = tk.Toplevel()
+        password_var = tk.StringVar()
+        password_label = tk.Label(AddPasswordScreen, text='Password')
+        password_entry = tk.Entry(AddPasswordScreen, textvariable=password_var)
+        if multiple:
+            prompt_var = tk.StringVar()
+            prompt_label = tk.Label(AddPasswordScreen, text='Password Prompt')
+            prompt_entry = tk.Entry(AddPasswordScreen, textvariable=prompt_var)
+            add_password_button = tk.Button(AddPasswordScreen, text='Add', command=lambda: self.add_password(multiple, account_id, prompt=prompt_var.get(), password=password_var.get()))
+
+            prompt_label.pack()
+            prompt_entry.pack()
+            password_label.pack()
+            password_entry.pack()
+            add_password_button.pack()
+        elif not multiple:
+            add_password_button = tk.Button(AddPasswordScreen, text='Add', command=lambda: self.add_password(multiple, account_id, password=password_var.get()))
+            password_label.pack()
+            password_entry.pack()
+            add_password_button.pack()
+
+           
+    def add_password(self, multiple, account_id, **kwargs):
+        if multiple:
+            new_password = Password(kwargs['password'], account_id)
+            new_password.prompt = kwargs['prompt']
+            save_password(conn, new_password)
+        elif not multiple:
+            new_password = Password(kwargs['password'], account_id)
+            save_password(conn, new_password)
 
     def view_account(self, account_id):
         AccountPage = tk.Toplevel()
@@ -141,16 +170,22 @@ class MainScreen(tk.Frame):
                 shown_passwords[f'pass_{x}'] = tk.Button(AccountPage, text=this_account['passwords'][x][0], command=lambda i=i: self.show_password(i))
                 shown_passwords[f'pass_{x}'].pack()
 
+            add_pass_button = tk.Button(AccountPage, text='Add Password', command=lambda: self.add_password_screen(True, account_id))
+            add_pass_button.pack()
+
         elif this_account['multiple']> 0 and len(this_account['passwords']) == 0:
-            add_pass_button = tk.Button(AccountPage, text='Add Password', command=lambda: self.add_password(True))
+            add_pass_button = tk.Button(AccountPage, text='Add Password', command=lambda: self.add_password_screen(True, account_id))
             add_pass_button.pack()
 
         elif not this_account['passwords']is None:
             account_password = tk.Label(AccountPage, text=this_account['passwords'])
             account_password.pack()
 
+            add_pass_button = tk.Button(AccountPage, text='Add Password', command=lambda: self.add_password_screen(False, account_id))
+            add_pass_button.pack()
+
         elif this_account['passwords']is None:    
-            add_pass_button = tk.Button(AccountPage, text='Add Password', command=lambda: self.add_password(False))
+            add_pass_button = tk.Button(AccountPage, text='Add Password', command=lambda: self.add_password_screen(False, account_id))
             add_pass_button.pack()
 
         delete_account_button = tk.Button(AccountPage, text='Delete Account', command=lambda: self.delete_account_confirm(account_id, AccountPage))

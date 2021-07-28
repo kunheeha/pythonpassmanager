@@ -63,6 +63,21 @@ def save_account(connection, account_item):
     c.execute(sql, new_account)
     connection.commit()
 
+def save_password(connection, password_item):
+    c = connection.cursor()
+    c.execute('SELECT cryptkey FROM User LIMIT 1;')
+    cryptkey = c.fetchall()[0][0]
+    cipher_suite = Fernet(cryptkey)
+    password = password_item.password.encode('utf-8')
+    new_password = (password_item.prompt, cipher_suite.encrypt(password), password_item.account)
+    sql = '''
+    INSERT INTO Password(prompt,password,id_Account)
+    VALUES(?,?,?)
+    '''
+    c.execute(sql, new_password)
+    connection.commit()
+
+
 def get_accounts(connection):
     c = connection.cursor()
     c.execute('SELECT id, name FROM Account;')
