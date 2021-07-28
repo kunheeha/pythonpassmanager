@@ -63,7 +63,7 @@ def save_account(connection, account_item):
     c.execute(sql, new_account)
     connection.commit()
 
-def save_password(connection, password_item):
+def save_password_multiple(connection, password_item):
     c = connection.cursor()
     c.execute('SELECT cryptkey FROM User LIMIT 1;')
     cryptkey = c.fetchall()[0][0]
@@ -77,6 +77,18 @@ def save_password(connection, password_item):
     c.execute(sql, new_password)
     connection.commit()
 
+def save_password_single(connection, password_item):
+    c = connection.cursor()
+    c.execute('SELECT cryptkey FROM User LIMIT 1;')
+    cryptkey = c.fetchall()[0][0]
+    cipher_suite = Fernet(cryptkey)
+    password = password_item.password.encode('utf-8')
+    new_password = (cipher_suite.encrypt(password), password_item.account)
+    sql = '''
+    INSERT INTO Password(password,id_Account)
+    VALUES(?,?)
+    '''
+    c.execute(sql, new_password)
 
 def get_accounts(connection):
     c = connection.cursor()
@@ -90,13 +102,13 @@ def get_passwords(connection, account_id):
     account_name = retrieved_account[0][0]
     multiple = retrieved_account[0][1]
     passwords = None
-    c.execute(f'SELECT prompt, password FROM Password WHERE id_Account = {account_id}') 
+    c.execute(f'SELECT prompt, id FROM Password WHERE id_Account = {account_id}') 
     
     if multiple > 0:
         passwords = c.fetchall()
     else:
         try:
-            passwords = c.fetchall()[0][0]
+            passwords = c.fetchall()[0]
         except:
             pass
 
@@ -107,6 +119,17 @@ def get_passwords(connection, account_id):
             }
 
     return account_info 
+
+
+def get_show_password(connection, pass_id):
+    c = connection.cursor()
+    c.execute('SELECT cryptkey FROM User LIMIT 1;')
+    cryptkey = c.fetchall()[0][0]
+    cipher_suite = Fernet(cryptkey)
+    c.execute(f'SELECT password FROM Password WHERE id={pass_id};')
+    encrypted_pass = c.fetchall()[0][0]
+    password = cipher_suite.decrypt(encrypted_pass)
+    return password
             
 def delete_account_db(connection, account_id):
     c = connection.cursor()
