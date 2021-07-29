@@ -27,7 +27,7 @@ class PassManagerApp(tk.Tk):
 
         self.frames = {}
 
-        for F in (StartPage, RegisterPage, LoginPage, MainScreen):
+        for F in (StartPage, RegisterPage, LoginPage):
 
             frame = F(container, self)
 
@@ -35,7 +35,13 @@ class PassManagerApp(tk.Tk):
 
             frame.grid(row=0, column=0, sticky='nsew')
 
+        global MainScreen_obj
+        MainScreen_obj = MainScreen(container, self)
+        self.frames[MainScreen] = MainScreen_obj
+        MainScreen_obj.grid(row=0, column=0, sticky='nsew')
+
         self.show_frame(StartPage)
+
 
     def show_frame(self, cont):
         frame = self.frames[cont]
@@ -84,6 +90,15 @@ class RegisterPage(tk.Frame):
         passw = self.passw_var.get()
         new_user = User(name, passw)
         register_user(conn, new_user)
+        
+        # adding example account and password to db before user logs in for first time
+        example_account = Account('Example', 1)
+        example_password = Password('my$uperS3cretP@assword', 1)
+        example_password.prompt = 'This is an example password'
+
+        save_account(conn, example_account)
+        save_password_multiple(conn, example_password)
+
         controller.show_frame(LoginPage)
 
 
@@ -105,6 +120,7 @@ class LoginPage(tk.Frame):
     def login_attempt(self, controller):
         passw = self.passw_var.get()
         if login(conn, passw):
+            MainScreen_obj.refresh()
             controller.show_frame(MainScreen)
         else:
             self.fail_label.pack()
@@ -115,6 +131,9 @@ class MainScreen(tk.Frame):
     def __init__(self, parent, controller):
         tk.Frame.__init__(self, parent)
         self.controller = controller
+        add_account_button = tk.Button(self, text='New Account', command=lambda: self.add_new_account(self.controller))
+        add_account_button.pack()
+
         self.accounts = get_accounts(conn)
         self.shown_accounts = {}
         
@@ -124,8 +143,15 @@ class MainScreen(tk.Frame):
             self.shown_accounts[f'account_{x}'] = tk.Button(self, text=self.accounts[x][1], command=lambda i=i: self.view_account(i))
             self.shown_accounts[f'account_{x}'].pack()
 
-        add_account_button = tk.Button(self, text='New Account', command=lambda: self.add_new_account(self.controller))
-        add_account_button.pack()
+    def refresh(self):
+        self.accounts = get_accounts(conn)
+        self.shown_accounts = {}
+        
+        # retrieve all existing accounts and store them in self.shown_accounts
+        for x in range(len(self.accounts)):
+            i = self.accounts[x][0]
+            self.shown_accounts[f'account_{x}'] = tk.Button(self, text=self.accounts[x][1], command=lambda i=i: self.view_account(i))
+            self.shown_accounts[f'account_{x}'].pack()
 
     # create new screen with password and delete button
     def show_password(self, pass_id, account_id, accountScreen):

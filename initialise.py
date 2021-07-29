@@ -26,16 +26,6 @@ CREATE TABLE 'Password' (
 'id_Account' TEXT DEFAULT NULL REFERENCES 'Account' ('id')
 );'''
 
-add_example_account = '''
-INSERT INTO Account(name, multiple)
-VALUES('Example',1)
-'''
-
-add_example_password = '''
-INSERT INTO Password(prompt, password, id_Account)
-VALUES('Enter Password','mypassword',1)
-'''
-
 def initialise_db():
 
     conn = create_connection(database)
@@ -45,8 +35,6 @@ def initialise_db():
         create_table(conn, create_account_table)
         create_table(conn, create_password_table)
         print('Tables successfully created')
-        add_to_db(conn, add_example_account)
-        add_to_db(conn, add_example_password)
         return True
     else:
         print('Error, unable to create connection to db')
