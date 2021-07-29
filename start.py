@@ -5,7 +5,7 @@ from database import check_user, create_connection, register_user, login, save_a
 from initialise import initialise_db
 from models import User, Account, Password
 
-
+# check if database exists, if not create mypasswords.db 
 database_exists = os.path.exists('mypasswords.db')
 if not database_exists:
     successful_init = initialise_db()
@@ -41,6 +41,8 @@ class PassManagerApp(tk.Tk):
         frame = self.frames[cont]
         frame.tkraise()
 
+# if user exists, show option to enter login page
+# if user doesn't exist, show option to enter register page
 class StartPage(tk.Frame):
     def __init__(self, parent, controller):
         tk.Frame.__init__(self, parent)
@@ -115,7 +117,8 @@ class MainScreen(tk.Frame):
         self.controller = controller
         self.accounts = get_accounts(conn)
         self.shown_accounts = {}
-
+        
+        # retrieve all existing accounts and store them in self.shown_accounts
         for x in range(len(self.accounts)):
             i = self.accounts[x][0]
             self.shown_accounts[f'account_{x}'] = tk.Button(self, text=self.accounts[x][1], command=lambda i=i: self.view_account(i))
@@ -124,24 +127,27 @@ class MainScreen(tk.Frame):
         add_account_button = tk.Button(self, text='New Account', command=lambda: self.add_new_account(self.controller))
         add_account_button.pack()
 
+    # create new screen with password and delete button
     def show_password(self, pass_id):
         PasswordScreen = tk.Toplevel()
-        password = str(get_show_password(conn, pass_id))
+        password = get_show_password(conn, pass_id).decode('utf-8')
         pass_label = tk.Label(PasswordScreen, text=password)
         delete_pass_button = tk.Button(PasswordScreen, text='Delete Password', command=lambda: self.delete_password_confirm(pass_id, PasswordScreen))
         
         pass_label.pack()
         delete_pass_button.pack()
 
+    # create new screen to confirm password delete
     def delete_password_confirm(self, pass_id, parentScreen):
         ConfirmDelPass = tk.Toplevel()
-        this_pass = str(get_show_password(conn, pass_id))
+        this_pass = get_show_password(conn, pass_id).decode('utf-8')
         confirm_label = tk.Label(ConfirmDelPass, text=f'Are you sure you want to delete password: {this_pass}?')
         confirm_button = tk.Button(ConfirmDelPass, text='Delete', command=lambda: self.delete_password(pass_id, ConfirmDelPass, parentScreen))
 
         confirm_label.pack()
         confirm_button.pack()
 
+    # deleting password destorys del_pass_confirm screen and show_pass screen
     def delete_password(self, pass_id, currentScreen, parentScreen):
         if delete_pass_db(conn, pass_id) is True:
             currentScreen.destroy()
@@ -150,30 +156,34 @@ class MainScreen(tk.Frame):
         else:
             print('error')
 
+    # create new screen with password_var to take input
     def add_password_screen(self, multiple, account_id):
         AddPasswordScreen = tk.Toplevel()
         password_var = tk.StringVar()
         password_label = tk.Label(AddPasswordScreen, text='Password')
         password_entry = tk.Entry(AddPasswordScreen, textvariable=password_var)
+        # account has multiple associated passwords 
         if multiple:
             prompt_var = tk.StringVar()
             prompt_label = tk.Label(AddPasswordScreen, text='Password Prompt')
             prompt_entry = tk.Entry(AddPasswordScreen, textvariable=prompt_var)
-            add_password_button = tk.Button(AddPasswordScreen, text='Add', command=lambda: self.add_password(multiple, account_id, prompt=prompt_var.get(), password=password_var.get()))
+            add_password_button = tk.Button(AddPasswordScreen, text='Add', command=lambda: self.add_password(AddPasswordScreen, multiple, account_id, prompt=prompt_var.get(), password=password_var.get()))
 
             prompt_label.pack()
             prompt_entry.pack()
             password_label.pack()
             password_entry.pack()
             add_password_button.pack()
+        # account only has one associated password
         elif not multiple:
-            add_password_button = tk.Button(AddPasswordScreen, text='Add', command=lambda: self.add_password(multiple, account_id, password=password_var.get()))
+            add_password_button = tk.Button(AddPasswordScreen, text='Add', command=lambda: self.add_password(AddPasswordScreen, multiple, account_id, password=password_var.get()))
             password_label.pack()
             password_entry.pack()
             add_password_button.pack()
 
            
-    def add_password(self, multiple, account_id, **kwargs):
+    # collect user input from add_pass_screen to add to database
+    def add_password(self, currentScreen,  multiple, account_id, **kwargs):
         if multiple:
             new_password = Password(kwargs['password'], account_id)
             new_password.prompt = kwargs['prompt']
@@ -182,11 +192,13 @@ class MainScreen(tk.Frame):
             new_password = Password(kwargs['password'], account_id)
             save_password_single(conn, new_password)
 
+        currentScreen.destroy()
+
+    # create new screen to show passwords in specified account
+    # doesn't display the actual passwords unless prompted by button on this screen
     def view_account(self, account_id):
         AccountPage = tk.Toplevel()
         this_account = get_passwords(conn, account_id)
-
-        print(this_account)
 
         # multiple passwords with existing passwords in db
         # show password prompts and add_pass button
@@ -220,6 +232,7 @@ class MainScreen(tk.Frame):
         delete_account_button = tk.Button(AccountPage, text='Delete Account', command=lambda: self.delete_account_confirm(account_id, AccountPage))
         delete_account_button.pack()
 
+    # create new screen to confirm deletion of specified account and all its associated passwords
     def delete_account_confirm(self, account_id, parentScreen):
         ConfirmDelete = tk.Toplevel()
         this_account = get_passwords(conn, account_id)
@@ -229,6 +242,8 @@ class MainScreen(tk.Frame):
         confirm_label.pack()
         confirm_button.pack()
 
+    # deletes account and associated passwords
+    # destroys del_acc_screen and account info screen
     def delete_account(self, account_id, currentScreen, parentScreen):
         if delete_account_db(conn, account_id) is True:
             self.accounts = get_accounts(conn)
@@ -245,11 +260,8 @@ class MainScreen(tk.Frame):
 
         else:
             print('error')
-        
 
-
-
-
+    # create new screen to take input about new account entry
     def add_new_account(self, controller):
         #controller.show_frame(AddAccount)
         AddAccount = tk.Toplevel(self)
@@ -268,6 +280,8 @@ class MainScreen(tk.Frame):
         add_button.pack()
 
 
+    # adds new account to database and destorys current screen
+    # refreshes the accounts shown on main screen by deleting all button on self.shown_accounts
     def add_account(self, currentScreen):
         account_name = self.account_name_var.get()
         multiple_passwords = self.multiple_passwords_var.get()
