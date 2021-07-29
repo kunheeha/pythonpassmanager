@@ -98,6 +98,7 @@ class RegisterPage(tk.Frame):
 
         save_account(conn, example_account)
         save_password_multiple(conn, example_password)
+        MainScreen_obj.refresh()
 
         controller.show_frame(LoginPage)
 
@@ -120,7 +121,6 @@ class LoginPage(tk.Frame):
     def login_attempt(self, controller):
         passw = self.passw_var.get()
         if login(conn, passw):
-            MainScreen_obj.refresh()
             controller.show_frame(MainScreen)
         else:
             self.fail_label.pack()
