@@ -128,36 +128,38 @@ class MainScreen(tk.Frame):
         add_account_button.pack()
 
     # create new screen with password and delete button
-    def show_password(self, pass_id):
+    def show_password(self, pass_id, account_id, accountScreen):
         PasswordScreen = tk.Toplevel()
         password = get_show_password(conn, pass_id).decode('utf-8')
         pass_label = tk.Label(PasswordScreen, text=password)
-        delete_pass_button = tk.Button(PasswordScreen, text='Delete Password', command=lambda: self.delete_password_confirm(pass_id, PasswordScreen))
+        delete_pass_button = tk.Button(PasswordScreen, text='Delete Password', command=lambda: self.delete_password_confirm(pass_id, PasswordScreen, accountScreen, account_id))
         
         pass_label.pack()
         delete_pass_button.pack()
 
     # create new screen to confirm password delete
-    def delete_password_confirm(self, pass_id, parentScreen):
+    def delete_password_confirm(self, pass_id, parentScreen, accountScreen, account_id):
         ConfirmDelPass = tk.Toplevel()
         this_pass = get_show_password(conn, pass_id).decode('utf-8')
         confirm_label = tk.Label(ConfirmDelPass, text=f'Are you sure you want to delete password: {this_pass}?')
-        confirm_button = tk.Button(ConfirmDelPass, text='Delete', command=lambda: self.delete_password(pass_id, ConfirmDelPass, parentScreen))
+        confirm_button = tk.Button(ConfirmDelPass, text='Delete', command=lambda: self.delete_password(pass_id, ConfirmDelPass, parentScreen, accountScreen, account_id))
 
         confirm_label.pack()
         confirm_button.pack()
 
     # deleting password destorys del_pass_confirm screen and show_pass screen
-    def delete_password(self, pass_id, currentScreen, parentScreen):
+    def delete_password(self, pass_id, currentScreen, parentScreen, accountScreen, account_id):
         if delete_pass_db(conn, pass_id) is True:
             currentScreen.destroy()
             parentScreen.destroy()
+            accountScreen.destroy()
+            self.view_account(account_id)
 
         else:
             print('error')
 
     # create new screen with password_var to take input
-    def add_password_screen(self, multiple, account_id):
+    def add_password_screen(self, account_screen, multiple, account_id):
         AddPasswordScreen = tk.Toplevel()
         password_var = tk.StringVar()
         password_label = tk.Label(AddPasswordScreen, text='Password')
@@ -167,7 +169,7 @@ class MainScreen(tk.Frame):
             prompt_var = tk.StringVar()
             prompt_label = tk.Label(AddPasswordScreen, text='Password Prompt')
             prompt_entry = tk.Entry(AddPasswordScreen, textvariable=prompt_var)
-            add_password_button = tk.Button(AddPasswordScreen, text='Add', command=lambda: self.add_password(AddPasswordScreen, multiple, account_id, prompt=prompt_var.get(), password=password_var.get()))
+            add_password_button = tk.Button(AddPasswordScreen, text='Add', command=lambda: self.add_password(account_screen, AddPasswordScreen, multiple, account_id, prompt=prompt_var.get(), password=password_var.get()))
 
             prompt_label.pack()
             prompt_entry.pack()
@@ -176,14 +178,14 @@ class MainScreen(tk.Frame):
             add_password_button.pack()
         # account only has one associated password
         elif not multiple:
-            add_password_button = tk.Button(AddPasswordScreen, text='Add', command=lambda: self.add_password(AddPasswordScreen, multiple, account_id, password=password_var.get()))
+            add_password_button = tk.Button(AddPasswordScreen, text='Add', command=lambda: self.add_password(account_screen, AddPasswordScreen, multiple, account_id, password=password_var.get()))
             password_label.pack()
             password_entry.pack()
             add_password_button.pack()
 
            
     # collect user input from add_pass_screen to add to database
-    def add_password(self, currentScreen,  multiple, account_id, **kwargs):
+    def add_password(self, accountScreen, currentScreen,  multiple, account_id, **kwargs):
         if multiple:
             new_password = Password(kwargs['password'], account_id)
             new_password.prompt = kwargs['prompt']
@@ -192,7 +194,9 @@ class MainScreen(tk.Frame):
             new_password = Password(kwargs['password'], account_id)
             save_password_single(conn, new_password)
 
+        accountScreen.destroy()
         currentScreen.destroy()
+        self.view_account(account_id)
 
     # create new screen to show passwords in specified account
     # doesn't display the actual passwords unless prompted by button on this screen
@@ -206,27 +210,27 @@ class MainScreen(tk.Frame):
             shown_passwords = {}
             for x in range(len(this_account['passwords'])):
                 i = this_account['passwords'][x][1]
-                shown_passwords[f'pass_{x}'] = tk.Button(AccountPage, text=this_account['passwords'][x][0], command=lambda i=i: self.show_password(i))
+                shown_passwords[f'pass_{x}'] = tk.Button(AccountPage, text=this_account['passwords'][x][0], command=lambda i=i: self.show_password(i, account_id, AccountPage))
                 shown_passwords[f'pass_{x}'].pack()
 
-            add_pass_button = tk.Button(AccountPage, text='Add Password', command=lambda: self.add_password_screen(True, account_id))
+            add_pass_button = tk.Button(AccountPage, text='Add Password', command=lambda: self.add_password_screen(AccountPage, True, account_id))
             add_pass_button.pack()
 
         # multiple passwords and no existing passwords in db
         # show add_pass button
         elif this_account['multiple'] > 0 and len(this_account['passwords']) == 0:
-            add_pass_button = tk.Button(AccountPage, text='Add Password', command=lambda: self.add_password_screen(True, account_id))
+            add_pass_button = tk.Button(AccountPage, text='Add Password', command=lambda: self.add_password_screen(AccountPage, True, account_id))
             add_pass_button.pack()
 
         # single password for account existing in db
         elif not this_account['passwords'] is None:
-            show_pass_button = tk.Button(AccountPage, text='Show Password', command=lambda: self.show_password(this_account['passwords'][1]))
+            show_pass_button = tk.Button(AccountPage, text='Show Password', command=lambda: self.show_password(this_account['passwords'][1], account_id, AccountPage))
             show_pass_button.pack()
 
         # single password but no existing password in db
         # show add_pass button
         elif this_account['passwords'] is None:    
-            add_pass_button = tk.Button(AccountPage, text='Add Password', command=lambda: self.add_password_screen(False, account_id))
+            add_pass_button = tk.Button(AccountPage, text='Add Password', command=lambda: self.add_password_screen(AccountPage, False, account_id))
             add_pass_button.pack()
 
         delete_account_button = tk.Button(AccountPage, text='Delete Account', command=lambda: self.delete_account_confirm(account_id, AccountPage))
