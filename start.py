@@ -1,5 +1,6 @@
 import os.path
 import tkinter as tk
+from tkinter import ttk
 from cryptography.fernet import Fernet
 from database import check_user, create_connection, register_user, login, save_account, get_accounts, get_passwords, delete_account_db, save_password_multiple, save_password_single, get_show_password, delete_pass_db
 from initialise import initialise_db
@@ -18,6 +19,20 @@ usercheck = len(check_user(conn)) > 0
 class PassManagerApp(tk.Tk):
     def __init__(self, *args, **kwargs):
         tk.Tk.__init__(self, *args, **kwargs)
+
+        tk.Tk.geometry(self, "600x250")
+        # Placing window on centre of screen
+        # adapted from https://yagisanatode.com/2018/02/24/how-to-center-the-main-window-on-the-screen-in-tkinter-with-python-3/
+        positionRight = int(self.winfo_screenwidth()/2 - 600/2)
+        positionDown = int(self.winfo_screenheight()/2 - 250/2)
+        tk.Tk.geometry(self, f'+{positionRight}+{positionDown}')
+        
+        # set icon
+        icon = tk.PhotoImage(file='lock_icon.png')
+        tk.Tk.iconphoto(self, False, icon)
+        # set title of window
+        tk.Tk.wm_title(self, 'Password Manager')
+
         container = tk.Frame(self)
 
         container.pack(side='top', fill='both', expand=True)
@@ -52,9 +67,9 @@ class PassManagerApp(tk.Tk):
 class StartPage(tk.Frame):
     def __init__(self, parent, controller):
         tk.Frame.__init__(self, parent)
-        register_button = tk.Button(self, text="Start", command=lambda: controller.show_frame(RegisterPage))
-        login_button = tk.Button(self, text="Login", command=lambda: controller.show_frame(LoginPage))
-        close_button = tk.Button(self, text="Close")
+        register_button = ttk.Button(self, text="Start", command=lambda: controller.show_frame(RegisterPage))
+        login_button = ttk.Button(self, text="Login", command=lambda: controller.show_frame(LoginPage))
+        close_button = ttk.Button(self, text="Close")
         if usercheck:
             login_button.pack()
             close_button.pack()
@@ -74,7 +89,7 @@ class RegisterPage(tk.Frame):
         passw_label = tk.Label(self, text='Master Password')
         
         name_entry = tk.Entry(self, textvariable=self.name_var)
-        passw_entry = tk.Entry(self, textvariable=self.passw_var)
+        passw_entry = tk.Entry(self, show='*', textvariable=self.passw_var)
 
         prompt_label.pack()
         name_label.pack()
@@ -82,7 +97,7 @@ class RegisterPage(tk.Frame):
         passw_label.pack()
         passw_entry.pack()
         # add register function
-        register_user_button = tk.Button(self, text='Register', command=lambda: self.register(self.controller))
+        register_user_button = ttk.Button(self, text='Register', command=lambda: self.register(self.controller))
         register_user_button.pack()
 
     def register(self, controller):
@@ -110,8 +125,8 @@ class LoginPage(tk.Frame):
         self.passw_var = tk.StringVar()
 
         prompt_label = tk.Label(self, text='Enter Master Password')
-        passw_entry = tk.Entry(self, textvariable=self.passw_var)
-        login_button = tk.Button(self, text='Login', command=lambda: self.login_attempt(self.controller))
+        passw_entry = tk.Entry(self, show='*', textvariable=self.passw_var)
+        login_button = ttk.Button(self, text='Login', command=lambda: self.login_attempt(self.controller))
         self.fail_label = tk.Label(self, text='Login Failed, try again')
 
         prompt_label.pack()
@@ -131,7 +146,7 @@ class MainScreen(tk.Frame):
     def __init__(self, parent, controller):
         tk.Frame.__init__(self, parent)
         self.controller = controller
-        add_account_button = tk.Button(self, text='New Account', command=lambda: self.add_new_account(self.controller))
+        add_account_button = ttk.Button(self, text='New Account', command=lambda: self.add_new_account(self.controller))
         add_account_button.pack()
 
         self.accounts = get_accounts(conn)
@@ -140,7 +155,7 @@ class MainScreen(tk.Frame):
         # retrieve all existing accounts and store them in self.shown_accounts
         for x in range(len(self.accounts)):
             i = self.accounts[x][0]
-            self.shown_accounts[f'account_{x}'] = tk.Button(self, text=self.accounts[x][1], command=lambda i=i: self.view_account(i))
+            self.shown_accounts[f'account_{x}'] = ttk.Button(self, text=self.accounts[x][1], command=lambda i=i: self.view_account(i))
             self.shown_accounts[f'account_{x}'].pack()
 
     def refresh(self):
@@ -150,15 +165,21 @@ class MainScreen(tk.Frame):
         # retrieve all existing accounts and store them in self.shown_accounts
         for x in range(len(self.accounts)):
             i = self.accounts[x][0]
-            self.shown_accounts[f'account_{x}'] = tk.Button(self, text=self.accounts[x][1], command=lambda i=i: self.view_account(i))
+            self.shown_accounts[f'account_{x}'] = ttk.Button(self, text=self.accounts[x][1], command=lambda i=i: self.view_account(i))
             self.shown_accounts[f'account_{x}'].pack()
 
     # create new screen with password and delete button
     def show_password(self, pass_id, account_id, accountScreen):
         PasswordScreen = tk.Toplevel()
+        PasswordScreen.geometry("300x50")
+        # Placing window on centre of screen
+        positionRight = int(self.winfo_screenwidth()/2 - 300/2)
+        positionDown = int(self.winfo_screenheight()/2 - 50/2)
+        PasswordScreen.geometry(f'+{positionRight}+{positionDown}')
+
         password = get_show_password(conn, pass_id).decode('utf-8')
         pass_label = tk.Label(PasswordScreen, text=password)
-        delete_pass_button = tk.Button(PasswordScreen, text='Delete Password', command=lambda: self.delete_password_confirm(pass_id, PasswordScreen, accountScreen, account_id))
+        delete_pass_button = ttk.Button(PasswordScreen, text='Delete Password', command=lambda: self.delete_password_confirm(pass_id, PasswordScreen, accountScreen, account_id))
         
         pass_label.pack()
         delete_pass_button.pack()
@@ -166,9 +187,15 @@ class MainScreen(tk.Frame):
     # create new screen to confirm password delete
     def delete_password_confirm(self, pass_id, parentScreen, accountScreen, account_id):
         ConfirmDelPass = tk.Toplevel()
+        ConfirmDelPass.geometry("300x50")
+        # Placing window on centre of screen
+        positionRight = int(self.winfo_screenwidth()/2 - 300/2)
+        positionDown = int(self.winfo_screenheight()/2 - 100/2)
+        ConfirmDelPass.geometry(f'+{positionRight}+{positionDown}')
+
         this_pass = get_show_password(conn, pass_id).decode('utf-8')
         confirm_label = tk.Label(ConfirmDelPass, text=f'Are you sure you want to delete password: {this_pass}?')
-        confirm_button = tk.Button(ConfirmDelPass, text='Delete', command=lambda: self.delete_password(pass_id, ConfirmDelPass, parentScreen, accountScreen, account_id))
+        confirm_button = ttk.Button(ConfirmDelPass, text='Delete', command=lambda: self.delete_password(pass_id, ConfirmDelPass, parentScreen, accountScreen, account_id))
 
         confirm_label.pack()
         confirm_button.pack()
@@ -187,6 +214,12 @@ class MainScreen(tk.Frame):
     # create new screen with password_var to take input
     def add_password_screen(self, account_screen, multiple, account_id):
         AddPasswordScreen = tk.Toplevel()
+        AddPasswordScreen.geometry("300x70")
+        # Placing window on centre of screen
+        positionRight = int(self.winfo_screenwidth()/2 - 300/2)
+        positionDown = int(self.winfo_screenheight()/2 - 70/2)
+        AddPasswordScreen.geometry(f'+{positionRight}+{positionDown}')
+
         password_var = tk.StringVar()
         password_label = tk.Label(AddPasswordScreen, text='Password')
         password_entry = tk.Entry(AddPasswordScreen, textvariable=password_var)
@@ -195,7 +228,7 @@ class MainScreen(tk.Frame):
             prompt_var = tk.StringVar()
             prompt_label = tk.Label(AddPasswordScreen, text='Password Prompt')
             prompt_entry = tk.Entry(AddPasswordScreen, textvariable=prompt_var)
-            add_password_button = tk.Button(AddPasswordScreen, text='Add', command=lambda: self.add_password(account_screen, AddPasswordScreen, multiple, account_id, prompt=prompt_var.get(), password=password_var.get()))
+            add_password_button = ttk.Button(AddPasswordScreen, text='Add', command=lambda: self.add_password(account_screen, AddPasswordScreen, multiple, account_id, prompt=prompt_var.get(), password=password_var.get()))
 
             prompt_label.pack()
             prompt_entry.pack()
@@ -204,7 +237,7 @@ class MainScreen(tk.Frame):
             add_password_button.pack()
         # account only has one associated password
         elif not multiple:
-            add_password_button = tk.Button(AddPasswordScreen, text='Add', command=lambda: self.add_password(account_screen, AddPasswordScreen, multiple, account_id, password=password_var.get()))
+            add_password_button = ttk.Button(AddPasswordScreen, text='Add', command=lambda: self.add_password(account_screen, AddPasswordScreen, multiple, account_id, password=password_var.get()))
             password_label.pack()
             password_entry.pack()
             add_password_button.pack()
@@ -228,6 +261,12 @@ class MainScreen(tk.Frame):
     # doesn't display the actual passwords unless prompted by button on this screen
     def view_account(self, account_id):
         AccountPage = tk.Toplevel()
+        AccountPage.geometry("300x100")
+        # Placing window on centre of screen
+        positionRight = int(self.winfo_screenwidth()/2 - 300/2)
+        positionDown = int(self.winfo_screenheight()/2 - 100/2)
+        AccountPage.geometry(f'+{positionRight}+{positionDown}')
+
         this_account = get_passwords(conn, account_id)
 
         # multiple passwords with existing passwords in db
@@ -236,38 +275,44 @@ class MainScreen(tk.Frame):
             shown_passwords = {}
             for x in range(len(this_account['passwords'])):
                 i = this_account['passwords'][x][1]
-                shown_passwords[f'pass_{x}'] = tk.Button(AccountPage, text=this_account['passwords'][x][0], command=lambda i=i: self.show_password(i, account_id, AccountPage))
+                shown_passwords[f'pass_{x}'] = ttk.Button(AccountPage, text=this_account['passwords'][x][0], command=lambda i=i: self.show_password(i, account_id, AccountPage))
                 shown_passwords[f'pass_{x}'].pack()
 
-            add_pass_button = tk.Button(AccountPage, text='Add Password', command=lambda: self.add_password_screen(AccountPage, True, account_id))
+            add_pass_button = ttk.Button(AccountPage, text='Add Password', command=lambda: self.add_password_screen(AccountPage, True, account_id))
             add_pass_button.pack()
 
         # multiple passwords and no existing passwords in db
         # show add_pass button
         elif this_account['multiple'] > 0 and len(this_account['passwords']) == 0:
-            add_pass_button = tk.Button(AccountPage, text='Add Password', command=lambda: self.add_password_screen(AccountPage, True, account_id))
+            add_pass_button = ttk.Button(AccountPage, text='Add Password', command=lambda: self.add_password_screen(AccountPage, True, account_id))
             add_pass_button.pack()
 
         # single password for account existing in db
         elif not this_account['passwords'] is None:
-            show_pass_button = tk.Button(AccountPage, text='Show Password', command=lambda: self.show_password(this_account['passwords'][1], account_id, AccountPage))
+            show_pass_button = ttk.Button(AccountPage, text='Show Password', command=lambda: self.show_password(this_account['passwords'][1], account_id, AccountPage))
             show_pass_button.pack()
 
         # single password but no existing password in db
         # show add_pass button
         elif this_account['passwords'] is None:    
-            add_pass_button = tk.Button(AccountPage, text='Add Password', command=lambda: self.add_password_screen(AccountPage, False, account_id))
+            add_pass_button = ttk.Button(AccountPage, text='Add Password', command=lambda: self.add_password_screen(AccountPage, False, account_id))
             add_pass_button.pack()
 
-        delete_account_button = tk.Button(AccountPage, text='Delete Account', command=lambda: self.delete_account_confirm(account_id, AccountPage))
+        delete_account_button = ttk.Button(AccountPage, text='Delete Account', command=lambda: self.delete_account_confirm(account_id, AccountPage))
         delete_account_button.pack()
 
     # create new screen to confirm deletion of specified account and all its associated passwords
     def delete_account_confirm(self, account_id, parentScreen):
         ConfirmDelete = tk.Toplevel()
+        ConfirmDelete.geometry("300x50")
+        # Placing window on centre of screen
+        positionRight = int(self.winfo_screenwidth()/2 - 300/2)
+        positionDown = int(self.winfo_screenheight()/2 - 50/2)
+        ConfirmDelete.geometry(f'+{positionRight}+{positionDown}')
+
         this_account = get_passwords(conn, account_id)
         confirm_label = tk.Label(ConfirmDelete, text=f'Are you sure you want to delete {this_account["account_name"]}?')
-        confirm_button = tk.Button(ConfirmDelete, text='Delete', command=lambda: self.delete_account(account_id, ConfirmDelete, parentScreen))
+        confirm_button = ttk.Button(ConfirmDelete, text='Delete', command=lambda: self.delete_account(account_id, ConfirmDelete, parentScreen))
 
         confirm_label.pack()
         confirm_button.pack()
@@ -282,7 +327,7 @@ class MainScreen(tk.Frame):
             self.shown_accounts = {}
             for x in range(len(self.accounts)):
                 i = self.accounts[x][0]
-                self.shown_accounts[f'account_{x}'] = tk.Button(self, text=self.accounts[x][1], command=lambda i=i: self.view_account(i))
+                self.shown_accounts[f'account_{x}'] = ttk.Button(self, text=self.accounts[x][1], command=lambda i=i: self.view_account(i))
                 self.shown_accounts[f'account_{x}'].pack()
 
                 currentScreen.destroy()
@@ -295,6 +340,12 @@ class MainScreen(tk.Frame):
     def add_new_account(self, controller):
         #controller.show_frame(AddAccount)
         AddAccount = tk.Toplevel(self)
+        AddAccount.geometry("300x100")
+        # Placing window on centre of screen
+        positionRight = int(self.winfo_screenwidth()/2 - 300/2)
+        positionDown = int(self.winfo_screenheight()/2 - 100/2)
+        AddAccount.geometry(f'+{positionRight}+{positionDown}')
+
 
         self.account_name_var = tk.StringVar()
         self.multiple_passwords_var = tk.IntVar()
@@ -302,7 +353,7 @@ class MainScreen(tk.Frame):
         account_name_label = tk.Label(AddAccount, text='Account Name')
         multiple_passwords = tk.Checkbutton(AddAccount, text='Check if this account has multiple passwords', variable=self.multiple_passwords_var, onvalue=1, offvalue=0)
         account_name_entry = tk.Entry(AddAccount, textvariable=self.account_name_var)
-        add_button = tk.Button(AddAccount, text='Add', command=lambda: self.add_account(AddAccount))
+        add_button = ttk.Button(AddAccount, text='Add', command=lambda: self.add_account(AddAccount))
 
         account_name_label.pack()
         account_name_entry.pack()
@@ -324,7 +375,7 @@ class MainScreen(tk.Frame):
         self.shown_accounts = {}
         for x in range(len(self.accounts)):
             i = self.accounts[x][0]
-            self.shown_accounts[f'account_{x}'] = tk.Button(self, text=self.accounts[x][1], command=lambda i=i: self.view_account(i))
+            self.shown_accounts[f'account_{x}'] = ttk.Button(self, text=self.accounts[x][1], command=lambda i=i: self.view_account(i))
             self.shown_accounts[f'account_{x}'].pack()
         
         currentScreen.destroy()
