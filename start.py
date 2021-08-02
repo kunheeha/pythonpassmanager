@@ -223,7 +223,7 @@ class MainScreen(tk.Frame):
         # show password prompts and add_pass button
         if this_account['multiple'] > 0 and len(this_account['passwords']) > 0:
             prompt_frame = tk.LabelFrame(account_frame, text='Password prompts', padx=10, pady=10)
-            prompt_frame.pack()
+            prompt_frame.grid(row=0, column=0)
             col_number = 0
             row_number = 0
             shown_passwords = {}
@@ -238,31 +238,32 @@ class MainScreen(tk.Frame):
                     col_number += 1
 
             add_pass_button = ttk.Button(account_frame, text='Add Password', command=lambda: self.add_password_screen(AccountPage, True, account_id))
-            add_pass_button.pack()
+            add_pass_button.grid(row=1, column=0)
 
         # multiple passwords and no existing passwords in db
         # show add_pass button
         elif this_account['multiple'] > 0 and len(this_account['passwords']) == 0:
             add_pass_button = ttk.Button(account_frame, text='Add Password', command=lambda: self.add_password_screen(AccountPage, True, account_id))
-            add_pass_button.pack()
+            add_pass_button.grid(row=0, column=0)
 
         # single password for account existing in db
         elif not this_account['passwords'] is None:
             show_pass_button = ttk.Button(account_frame, text='Show Password', command=lambda: self.show_password(this_account['passwords'][1], account_id, AccountPage))
-            show_pass_button.pack()
+            show_pass_button.grid(row=0, column=0)
 
         # single password but no existing password in db
         # show add_pass button
         elif this_account['passwords'] is None:    
             add_pass_button = ttk.Button(account_frame, text='Add Password', command=lambda: self.add_password_screen(AccountPage, False, account_id))
-            add_pass_button.pack()
+            add_pass_button.grid(row=0, column=0)
 
-        delete_account_button = ttk.Button(AccountPage, text='Delete Account', command=lambda: self.delete_account_confirm(account_id, AccountPage))
-        delete_account_button.pack()
+        delete_account_button = ttk.Button(account_frame, text='Delete Account', command=lambda: self.delete_account_confirm(account_id, AccountPage))
+        delete_account_button.grid(row=2, column=0)
 
     # create new screen with password and delete button
     def show_password(self, pass_id, account_id, accountScreen):
         PasswordScreen = tk.Toplevel()
+        PasswordScreen.title(get_account_name(conn, account_id))
         PasswordScreen.geometry("300x250")
         # Placing window on centre of screen
         positionRight = int(self.winfo_screenwidth()/2 - 300/2)
@@ -270,7 +271,7 @@ class MainScreen(tk.Frame):
         PasswordScreen.geometry(f'+{positionRight}+{positionDown}')
 
         password = get_show_password(conn, pass_id).decode('utf-8')
-        pass_label = tk.Label(PasswordScreen, text=password)
+        pass_label = tk.Label(PasswordScreen, text=password, font='Helvetica 18 bold')
         delete_pass_button = ttk.Button(PasswordScreen, text='Delete Password', command=lambda: self.delete_password_confirm(pass_id, PasswordScreen, accountScreen, account_id))
         
         pass_label.pack()
@@ -279,6 +280,7 @@ class MainScreen(tk.Frame):
     # create new screen to confirm password delete
     def delete_password_confirm(self, pass_id, parentScreen, accountScreen, account_id):
         ConfirmDelPass = tk.Toplevel()
+        ConfirmDelPass.title('Delete Password')
         ConfirmDelPass.geometry("300x250")
         # Placing window on centre of screen
         positionRight = int(self.winfo_screenwidth()/2 - 300/2)
@@ -306,6 +308,7 @@ class MainScreen(tk.Frame):
     # create new screen with password_var to take input
     def add_password_screen(self, account_screen, multiple, account_id):
         AddPasswordScreen = tk.Toplevel()
+        AddPasswordScreen.title(f'Add Password to {get_account_name(conn, account_id)}')
         AddPasswordScreen.geometry("300x250")
         # Placing window on centre of screen
         positionRight = int(self.winfo_screenwidth()/2 - 300/2)

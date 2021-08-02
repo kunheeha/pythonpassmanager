@@ -69,7 +69,7 @@ def save_account(connection, account_item):
     c.execute(sql, new_account)
     connection.commit()
 
-def get_account_name(connections, account_id):
+def get_account_name(connection, account_id):
     c = connection.cursor()
     c.execute(f'SELECT name from Account WHERE id={account_id}')
     return c.fetchall()[0][0]
