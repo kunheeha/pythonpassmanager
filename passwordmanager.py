@@ -122,6 +122,7 @@ class RegisterPage(tk.Frame):
 
         save_account(conn, example_account)
         save_password_multiple(conn, example_password)
+        MainScreen_obj.after_register()
         MainScreen_obj.refresh()
 
         controller.show_frame(LoginPage)
@@ -158,11 +159,12 @@ class MainScreen(tk.Frame):
     def __init__(self, parent, controller):
         tk.Frame.__init__(self, parent)
         self.controller = controller
-        top_frame = tk.LabelFrame(self, text='Password Manager', padx=10, pady=10)
-        top_frame.pack(padx=25, pady=25)
-        welcome_label = tk.Label(top_frame, text=f'Welcome {get_user_name(conn)}')
-        welcome_label.grid(row=0, column=0, padx=(10, 100))
-        add_account_button = ttk.Button(top_frame, text='New Account', command=lambda: self.add_new_account(self.controller))
+        self.top_frame = tk.LabelFrame(self, text='Password Manager', padx=10, pady=10)
+        self.top_frame.pack(padx=25, pady=25)
+        if usercheck:
+            welcome_label = tk.Label(self.top_frame, text=f'Welcome {get_user_name(conn)}')
+            welcome_label.grid(row=0, column=0, padx=(10, 100))
+        add_account_button = ttk.Button(self.top_frame, text='New Account', command=lambda: self.add_new_account(self.controller))
         add_account_button.grid(row=0, column=1, padx=(100, 10))
 
         self.accounts = get_accounts(conn)
@@ -183,6 +185,11 @@ class MainScreen(tk.Frame):
                 self.row_number += 1
             else:
                 self.col_number += 1
+
+    # Call only after first registration to ensure name shows up
+    def after_register(self):
+        welcome_label = tk.Label(self.top_frame, text=f'Welcome {get_user_name(conn)}')
+        welcome_label.grid(row=0, column=0, padx=(10, 100)) 
 
     def refresh(self):
         # reset col and row numbers
