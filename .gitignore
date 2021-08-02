@@ -3,3 +3,6 @@ mypasswords.db
 *.swp
 *~
 venv
+*.spec
+.DS_Store
+macApp

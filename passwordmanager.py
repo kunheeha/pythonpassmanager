@@ -28,6 +28,7 @@ class PassManagerApp(tk.Tk):
         tk.Tk.geometry(self, f'+{positionRight}+{positionDown}')
         
         # set icon
+        # comment line for mac apps
         icon = tk.PhotoImage(file='lock_icon.png')
         tk.Tk.iconphoto(self, False, icon)
         # set title of window
