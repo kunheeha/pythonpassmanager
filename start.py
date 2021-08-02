@@ -2,7 +2,7 @@ import os.path
 import tkinter as tk
 from tkinter import ttk
 from cryptography.fernet import Fernet
-from database import check_user, create_connection, register_user, login, save_account, get_accounts, get_passwords, delete_account_db, save_password_multiple, save_password_single, get_show_password, delete_pass_db, get_user_name
+from database import check_user, create_connection, register_user, login, save_account, get_accounts, get_passwords, delete_account_db, save_password_multiple, save_password_single, get_show_password, delete_pass_db, get_user_name, get_account_name
 from initialise import initialise_db
 from models import User, Account, Password
 
@@ -183,8 +183,6 @@ class MainScreen(tk.Frame):
                 self.row_number += 1
             else:
                 self.col_number += 1
-        print(self.shown_accounts)
-            
 
     def refresh(self):
         # reset col and row numbers
@@ -205,6 +203,62 @@ class MainScreen(tk.Frame):
                 self.row_number += 1
             else:
                 self.col_number += 1
+
+    # create new screen to show passwords in specified account
+    # doesn't display the actual passwords unless prompted by button on this screen
+    def view_account(self, account_id):
+        AccountPage = tk.Toplevel()
+        this_account = get_passwords(conn, account_id)
+        AccountPage.title(this_account['account_name'])
+        AccountPage.geometry("300x250")
+        # Placing window on centre of screen
+        positionRight = int(self.winfo_screenwidth()/2 - 300/2)
+        positionDown = int(self.winfo_screenheight()/2 - 250/2)
+        AccountPage.geometry(f'+{positionRight}+{positionDown}')
+
+        account_frame = tk.LabelFrame(AccountPage, text=f'Account: {this_account["account_name"]}', padx=10, pady=10)
+        account_frame.pack()
+
+        # multiple passwords with existing passwords in db
+        # show password prompts and add_pass button
+        if this_account['multiple'] > 0 and len(this_account['passwords']) > 0:
+            prompt_frame = tk.LabelFrame(account_frame, text='Password prompts', padx=10, pady=10)
+            prompt_frame.pack()
+            col_number = 0
+            row_number = 0
+            shown_passwords = {}
+            for x in range(len(this_account['passwords'])):
+                i = this_account['passwords'][x][1]
+                shown_passwords[f'pass_{x}'] = ttk.Button(prompt_frame, text=this_account['passwords'][x][0], command=lambda i=i: self.show_password(i, account_id, AccountPage))
+                shown_passwords[f'pass_{x}'].grid(row=row_number, column=col_number)
+                if col_number >= 1:
+                    col_number = 0
+                    row_number += 1
+                else:
+                    col_number += 1
+
+            add_pass_button = ttk.Button(account_frame, text='Add Password', command=lambda: self.add_password_screen(AccountPage, True, account_id))
+            add_pass_button.pack()
+
+        # multiple passwords and no existing passwords in db
+        # show add_pass button
+        elif this_account['multiple'] > 0 and len(this_account['passwords']) == 0:
+            add_pass_button = ttk.Button(account_frame, text='Add Password', command=lambda: self.add_password_screen(AccountPage, True, account_id))
+            add_pass_button.pack()
+
+        # single password for account existing in db
+        elif not this_account['passwords'] is None:
+            show_pass_button = ttk.Button(account_frame, text='Show Password', command=lambda: self.show_password(this_account['passwords'][1], account_id, AccountPage))
+            show_pass_button.pack()
+
+        # single password but no existing password in db
+        # show add_pass button
+        elif this_account['passwords'] is None:    
+            add_pass_button = ttk.Button(account_frame, text='Add Password', command=lambda: self.add_password_screen(AccountPage, False, account_id))
+            add_pass_button.pack()
+
+        delete_account_button = ttk.Button(AccountPage, text='Delete Account', command=lambda: self.delete_account_confirm(account_id, AccountPage))
+        delete_account_button.pack()
 
     # create new screen with password and delete button
     def show_password(self, pass_id, account_id, accountScreen):
@@ -295,49 +349,6 @@ class MainScreen(tk.Frame):
         currentScreen.destroy()
         self.view_account(account_id)
 
-    # create new screen to show passwords in specified account
-    # doesn't display the actual passwords unless prompted by button on this screen
-    def view_account(self, account_id):
-        AccountPage = tk.Toplevel()
-        AccountPage.geometry("300x250")
-        # Placing window on centre of screen
-        positionRight = int(self.winfo_screenwidth()/2 - 300/2)
-        positionDown = int(self.winfo_screenheight()/2 - 250/2)
-        AccountPage.geometry(f'+{positionRight}+{positionDown}')
-
-        this_account = get_passwords(conn, account_id)
-
-        # multiple passwords with existing passwords in db
-        # show password prompts and add_pass button
-        if this_account['multiple'] > 0 and len(this_account['passwords']) > 0:
-            shown_passwords = {}
-            for x in range(len(this_account['passwords'])):
-                i = this_account['passwords'][x][1]
-                shown_passwords[f'pass_{x}'] = ttk.Button(AccountPage, text=this_account['passwords'][x][0], command=lambda i=i: self.show_password(i, account_id, AccountPage))
-                shown_passwords[f'pass_{x}'].pack()
-
-            add_pass_button = ttk.Button(AccountPage, text='Add Password', command=lambda: self.add_password_screen(AccountPage, True, account_id))
-            add_pass_button.pack()
-
-        # multiple passwords and no existing passwords in db
-        # show add_pass button
-        elif this_account['multiple'] > 0 and len(this_account['passwords']) == 0:
-            add_pass_button = ttk.Button(AccountPage, text='Add Password', command=lambda: self.add_password_screen(AccountPage, True, account_id))
-            add_pass_button.pack()
-
-        # single password for account existing in db
-        elif not this_account['passwords'] is None:
-            show_pass_button = ttk.Button(AccountPage, text='Show Password', command=lambda: self.show_password(this_account['passwords'][1], account_id, AccountPage))
-            show_pass_button.pack()
-
-        # single password but no existing password in db
-        # show add_pass button
-        elif this_account['passwords'] is None:    
-            add_pass_button = ttk.Button(AccountPage, text='Add Password', command=lambda: self.add_password_screen(AccountPage, False, account_id))
-            add_pass_button.pack()
-
-        delete_account_button = ttk.Button(AccountPage, text='Delete Account', command=lambda: self.delete_account_confirm(account_id, AccountPage))
-        delete_account_button.pack()
 
     # create new screen to confirm deletion of specified account and all its associated passwords
     def delete_account_confirm(self, account_id, parentScreen):

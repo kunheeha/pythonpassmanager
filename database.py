@@ -69,6 +69,11 @@ def save_account(connection, account_item):
     c.execute(sql, new_account)
     connection.commit()
 
+def get_account_name(connections, account_id):
+    c = connection.cursor()
+    c.execute(f'SELECT name from Account WHERE id={account_id}')
+    return c.fetchall()[0][0]
+
 def save_password_multiple(connection, password_item):
     c = connection.cursor()
     c.execute('SELECT cryptkey FROM User LIMIT 1;')
@@ -95,6 +100,7 @@ def save_password_single(connection, password_item):
     VALUES(?,?)
     '''
     c.execute(sql, new_password)
+    connection.commit()
 
 def get_accounts(connection):
     c = connection.cursor()
