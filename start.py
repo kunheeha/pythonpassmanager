@@ -169,15 +169,27 @@ class MainScreen(tk.Frame):
         self.shown_accounts = {}
 
         self.accounts_frame = tk.LabelFrame(self, text='Your Accounts', padx=10, pady=10)
-        self.accounts_frame.pack(padx=25, pady=25)
+        self.accounts_frame.pack(padx=25, pady=10)
         
+        self.col_number = 0
+        self.row_number = 0
         # retrieve all existing accounts and store them in self.shown_accounts
         for x in range(len(self.accounts)):
             i = self.accounts[x][0]
             self.shown_accounts[f'account_{x}'] = ttk.Button(self.accounts_frame, text=self.accounts[x][1], command=lambda i=i: self.view_account(i))
-            self.shown_accounts[f'account_{x}'].pack()
+            self.shown_accounts[f'account_{x}'].grid(row=self.row_number, column=self.col_number)
+            if self.col_number >= 5:
+                self.col_number = 0
+                self.row_number += 1
+            else:
+                self.col_number += 1
+        print(self.shown_accounts)
+            
 
     def refresh(self):
+        # reset col and row numbers
+        self.col_number = 0
+        self.row_number = 0
         self.accounts = get_accounts(conn)
         for w in self.shown_accounts:
             self.shown_accounts[w].destroy()
@@ -187,7 +199,12 @@ class MainScreen(tk.Frame):
         for x in range(len(self.accounts)):
             i = self.accounts[x][0]
             self.shown_accounts[f'account_{x}'] = ttk.Button(self.accounts_frame, text=self.accounts[x][1], command=lambda i=i: self.view_account(i))
-            self.shown_accounts[f'account_{x}'].pack()
+            self.shown_accounts[f'account_{x}'].grid(row=self.row_number, column=self.col_number)
+            if self.col_number >= 5:
+                self.col_number = 0
+                self.row_number += 1
+            else:
+                self.col_number += 1
 
     # create new screen with password and delete button
     def show_password(self, pass_id, account_id, accountScreen):
