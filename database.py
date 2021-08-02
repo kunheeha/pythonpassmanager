@@ -34,6 +34,12 @@ def check_user(connection):
     result = c.fetchall()
     return result
 
+def get_user_name(connection):
+    c = connection.cursor()
+    c.execute('SELECT name FROM User LIMIT 1;')
+    result = c.fetchall()[0][0]
+    return result
+
 def register_user(connection, user):
     new_user = (1, user.name, user.masterpassword, user.key)
     sql = '''
