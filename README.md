@@ -52,6 +52,10 @@ In the installed folder there is another folder with the same name (passwordmana
 
 Double click the application file (named passwordmanager) inside the above folder to launch
     
+## User Guide
+
+[User Guide](https://kunheeha.com/static/Password%20Manager%20%28python%29/Password%20Manager%20%28python%29_userguide.pdf)
+    
 ## Roadmap
 
 - All navigation and revealing of passwords to happen in a single window instead of new windows for each of the accounts and passwords.
