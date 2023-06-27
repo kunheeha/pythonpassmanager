@@ -7,7 +7,7 @@
 
 A completely offline password manager that encrypts passwords and stores them in a database on your local machine.
 
-- GUI - Tkinter (used tkinter to learn it)
+- GUI - Tkinter
 - Database - SQLite (used sqlite since it doesn't require server and is self-contained)
 - Password encryption - cryptography.fernet
 - Master password hashing - SHA-256
@@ -24,41 +24,16 @@ as well as just generic accounts with a single associated password.
 
 
   
-## Installation
-
-[Installation Guide](https://www.kunheeha.com/static/Password%20Manager%20%28python%29/Password%20Manager%20%28python%29_installguide.pdf)
+## Installation and Demo
 
 ### Mac
-[Download](https://www.kunheeha.com/software/1) or download the app file from releases
+Watch the demo below
+[![Watch the demo](https://img.youtube.com/vi/8SWrzp4BWxg/hqdefault.jpg)](https://youtu.be/8SWrzp4BWxg)
 
-Grant execution permission to passwordmanager script in the app
-```bash
-  chmod +x [dir to app]/passwordmanager.app/Contents/MacOS/passwordmanager
-```
-
-Double click the app and a warning sign will pop up saying that it is from an unidentified developer
-
-Click Open Anyway or open System Preferences -> Security and Privacy -> general and click Allow
-
-Please see [Installation Guide](https://www.kunheeha.com/static/Password%20Manager%20%28python%29/Password%20Manager%20%28python%29_installguide.pdf)
-if you run into any errors and the reasons for the steps above 
 
 ### Windows
-[Download](https://www.kunheeha.com/software/1) or download the exe file from releases
-
-The installer will allow you to specify the installation location and will install a folder called passwordmanager
-
-In the installed folder there is another folder with the same name (passwordmanager) - you can delete everything else
-
-Double click the application file (named passwordmanager) inside the above folder to launch
-    
-## User Guide
-
-[User Guide](https://kunheeha.com/static/Password%20Manager%20%28python%29/Password%20Manager%20%28python%29_userguide.pdf)
-    
-## Roadmap
-
-- All navigation and revealing of passwords to happen in a single window instead of new windows for each of the accounts and passwords.
+Watch the demo below
+[![Watch the demo](https://img.youtube.com/vi/LVhJAomn_P4/hqdefault.jpg)](https://youtu.be/LVhJAomn_P4)
 
 
   
