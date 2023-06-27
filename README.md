@@ -1,10 +1,6 @@
 
 # Password Manager
 
-![](https://onlineworkspace.org/uploadfiles/folder_11/Startscreen.png)
-
-![](https://onlineworkspace.org/uploadfiles/folder_11/useScreen.png)
-
 A completely offline password manager that encrypts passwords and stores them in a database on your local machine.
 
 - GUI - Tkinter
@@ -28,11 +24,13 @@ as well as just generic accounts with a single associated password.
 
 ### Mac
 Watch the demo below
+
 [![Watch the demo](https://img.youtube.com/vi/8SWrzp4BWxg/hqdefault.jpg)](https://youtu.be/8SWrzp4BWxg)
 
 
 ### Windows
 Watch the demo below
+
 [![Watch the demo](https://img.youtube.com/vi/LVhJAomn_P4/hqdefault.jpg)](https://youtu.be/LVhJAomn_P4)
 
 
